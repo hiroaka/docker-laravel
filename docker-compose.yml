@@ -2,12 +2,7 @@ version: '2'
 
 services:
   php:
-    build: 
-      context: ./
-      dockerfile: Dockerfile
-      args:
-        - uid=${uid:-33}
-        - gid=${gid:-33}
+    image: rrpraxedes/laravel-php:1.1
     ports:
      - 80:80
     volumes:
@@ -26,7 +21,7 @@ services:
     ports:
       - 3306:3306
     environment:
-      MYSQL_DATABASE: db
+      MYSQL_DATABASE: api_bbseg
       MYSQL_USER: cake
       MYSQL_PASSWORD: cake
       MYSQL_ROOT_PASSWORD: test
