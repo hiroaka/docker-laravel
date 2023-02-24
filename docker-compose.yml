@@ -1,0 +1,52 @@
+version: '2'
+
+services:
+  php:
+    build: 
+      context: ./
+      dockerfile: Dockerfile
+      args:
+        - uid=${uid:-33}
+        - gid=${gid:-33}
+    ports:
+     - 80:80
+    volumes:
+      - ./www:/var/www/html:rw
+      - ./php/:/usr/local/etc/php/conf.d/
+    environment:
+      - APACHE_RUN_USER=#1000
+      - APACHE_RUN_GROUP=#1000
+    links:
+      - db
+    networks:
+      - default
+
+  db:
+    image: mysql
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_DATABASE: db
+      MYSQL_USER: cake
+      MYSQL_PASSWORD: cake
+      MYSQL_ROOT_PASSWORD: test
+    volumes:
+      - ./dump:/docker-entrypoint-initdb.d
+      - persistent:/var/lib/mysql
+    networks:
+      - default
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    links: 
+      - db:db
+    ports:
+      - 8000:80
+    environment:
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: test
+      UPLOAD_LIMIT: 300M
+
+volumes:
+  persistent:
+

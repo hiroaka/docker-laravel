@@ -1,0 +1,8 @@
+#!/bin/sh
+
+echo "TESTE $uid"
+chown -R 33:33 /var/www/html
+
+composer install
+
+/usr/sbin/apache2ctl -D FOREGROUND
