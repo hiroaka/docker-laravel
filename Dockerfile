@@ -1,11 +1,11 @@
 FROM php:8.1-apache 
 
 
-RUN apt update && apt install -y libicu-dev libxml2-dev libzip-dev libonig-dev zlib1g-dev libpng-dev git zip unzip curl  libapache2-mod-security2 \
+RUN apt update && apt install -y libicu-dev libxml2-dev libzip-dev libonig-dev zlib1g-dev libpng-dev git zip unzip curl  libapache2-mod-security2 nano vim \
      && rm -rf /var/lib/apt/lists/* \
      && docker-php-ext-configure intl \
      && docker-php-ext-configure gd \
-     && docker-php-ext-install mysqli gd intl mbstring pdo_mysql exif zip \
+     && docker-php-ext-install mysqli gd intl mbstring pdo_mysql exif zip  xml \
      && a2enmod headers rewrite ssl security2
 
 # copia o entreypoint
@@ -19,32 +19,31 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
  && php composer-setup.php --install-dir=/usr/bin --filename=composer \
  && php -r "unlink('composer-setup.php');"
 
+
+COPY ./php/zz-php.ini /usr/local/etc/php/conf.d/zz-php.ini
 # copia o mod_ssl do apache
 COPY ./.docker/ssl.conf /etc/apache2/mods-available/ssl.conf
-# HEaders de COokie Apache
-RUN   echo "Header edit Set-Cookie ^(.*)$ $1;HttpOnly;Secure;SameSite=Strict" >> /etc/apache2/apache2.conf
+# outras configurações do apache
+COPY ./.docker/my.conf /etc/apache2/conf-enabled/my.conf
+COPY ./.docker/security.conf /etc/apache2/conf-enabled/security.conf
 
+
+COPY ./ssl/ssl-cert-snakeoil.pem  /etc/ssl/certs/ssl-cert-snakeoil.pem
+COPY ./ssl/ssl-cert-snakeoil.key /etc/ssl/private/ssl-cert-snakeoil.key
+
+
+COPY ./.docker/000-default.conf /etc/apache2/sites-available/000-default.conf
+COPY ./.docker/default-ssl.conf /etc/apache2/sites-available/default-ssl.conf
+
+RUN a2ensite 000-default.conf && a2ensite default-ssl.conf 
+
+# HEaders de Cookie Apache
+RUN  echo "Header always edit Set-Cookie ^(.*)$ $1;HttpOnly;Secure;SameSite=Lax" >> /etc/apache2/apache2.conf
 
 # Set working directory
 WORKDIR /var/www/html
-#COPY --chown=www-data ./www /var/www/html/
-
-#RUN chown -R www-data:www-data vendor/
-
-ARG uid
-ARG gid
-
-RUN mkdir /home/devuser
 
 
-#RUN useradd -G www-data,root -u ${uid} -d /home/devuser devuser
-#RUN mkdir -p /home/devuser/.composer && \
-#    chown -R ${uid}:${gid} /home/devuser
-
-USER ${uid}
-
-
-ENV uid=${uid} guid=${gid}
 ENTRYPOINT [ "/var/www/entrypoint" ]
 
 

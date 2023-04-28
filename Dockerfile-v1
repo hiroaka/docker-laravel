@@ -1,0 +1,50 @@
+FROM php:8.1-apache 
+
+
+RUN apt update && apt install -y libicu-dev libxml2-dev libzip-dev libonig-dev zlib1g-dev libpng-dev git zip unzip curl  libapache2-mod-security2 \
+     && rm -rf /var/lib/apt/lists/* \
+     && docker-php-ext-configure intl \
+     && docker-php-ext-configure gd \
+     && docker-php-ext-install mysqli gd intl mbstring pdo_mysql exif zip \
+     && a2enmod headers rewrite ssl security2
+
+# copia o entreypoint
+COPY ./.docker/entrypoint /var/www/entrypoint
+# adiciona permissão de execução para o Entrypoint
+RUN chmod +x /var/www/entrypoint
+
+# instala o Composer
+RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \ 
+ && php -r "if (hash_file('sha384', 'composer-setup.php') === '55ce33d7678c5a611085589f1f3ddf8b3c52d662cd01d4ba75c0ee0459970c2200a51f492d557530c71c15d8dba01eae') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;" \ 
+ && php composer-setup.php --install-dir=/usr/bin --filename=composer \
+ && php -r "unlink('composer-setup.php');"
+
+# copia o mod_ssl do apache
+COPY ./.docker/ssl.conf /etc/apache2/mods-available/ssl.conf
+# HEaders de COokie Apache
+RUN   echo "Header always edit Set-Cookie ^(.*)$ $1;HttpOnly;Secure;SameSite=Lax" >> /etc/apache2/apache2.conf
+
+
+# Set working directory
+WORKDIR /var/www/html
+#COPY --chown=www-data ./www /var/www/html/
+
+#RUN chown -R www-data:www-data vendor/
+
+ARG uid
+ARG gid
+
+RUN mkdir /home/devuser
+
+
+#RUN useradd -G www-data,root -u ${uid} -d /home/devuser devuser
+#RUN mkdir -p /home/devuser/.composer && \
+#    chown -R ${uid}:${gid} /home/devuser
+
+USER ${uid}
+
+
+ENV uid=${uid} guid=${gid}
+ENTRYPOINT [ "/var/www/entrypoint" ]
+
+

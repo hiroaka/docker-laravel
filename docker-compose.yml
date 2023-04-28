@@ -2,7 +2,13 @@ version: '2'
 
 services:
   php:
-    image: rrpraxedes/laravel-php:1.1
+    #image: rrpraxedes/laravel-php:1.1
+    build: 
+      context: ./
+      dockerfile: Dockerfile
+      args:
+        - uid=${uid:-33}
+        - gid=${gid:-33}
     ports:
      - 80:80
     volumes:
