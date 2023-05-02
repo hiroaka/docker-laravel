@@ -19,7 +19,7 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
  && php composer-setup.php --install-dir=/usr/bin --filename=composer \
  && php -r "unlink('composer-setup.php');"
 
-
+# configurações extras para o PHP ini
 COPY ./php/zz-php.ini /usr/local/etc/php/conf.d/zz-php.ini
 # copia o mod_ssl do apache
 COPY ./.docker/ssl.conf /etc/apache2/mods-available/ssl.conf
@@ -27,14 +27,13 @@ COPY ./.docker/ssl.conf /etc/apache2/mods-available/ssl.conf
 COPY ./.docker/my.conf /etc/apache2/conf-enabled/my.conf
 COPY ./.docker/security.conf /etc/apache2/conf-enabled/security.conf
 
-
+#copia o certificado de segurança
 COPY ./ssl/ssl-cert-snakeoil.pem  /etc/ssl/certs/ssl-cert-snakeoil.pem
 COPY ./ssl/ssl-cert-snakeoil.key /etc/ssl/private/ssl-cert-snakeoil.key
 
-
+# configuração do site defaul
 COPY ./.docker/000-default.conf /etc/apache2/sites-available/000-default.conf
 COPY ./.docker/default-ssl.conf /etc/apache2/sites-available/default-ssl.conf
-
 RUN a2ensite 000-default.conf && a2ensite default-ssl.conf 
 
 # HEaders de Cookie Apache
